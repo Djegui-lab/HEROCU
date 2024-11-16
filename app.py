@@ -4,17 +4,21 @@ from google.oauth2.service_account import Credentials
 import pandas as pd
 import os
 import json
+import base64
 
-# Charger les informations d'identification depuis la variable d'environnement sur Heroku
-json_credentials = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+# Charger les informations d'identification depuis la variable d'environnement (base64)
+encoded_json_credentials = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
 
 # Vérifier si les identifiants sont présents
-if not json_credentials:
+if not encoded_json_credentials:
     st.error("Les informations d'identification Google Sheets sont manquantes dans les variables d'environnement.")
     raise Exception("Google Sheets credentials missing.")
 
-# Convertir la chaîne JSON en dictionnaire
-credentials_dict = json.loads(json_credentials)
+# Décoder la chaîne base64 pour obtenir le fichier JSON
+decoded_json = base64.b64decode(encoded_json_credentials)
+
+# Convertir la chaîne JSON décodée en dictionnaire
+credentials_dict = json.loads(decoded_json)
 
 # Portée de l'API Google Sheets
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -70,5 +74,3 @@ def app():
 # Lancer l'application Streamlit
 if __name__ == "__main__":
     app()
-
-
