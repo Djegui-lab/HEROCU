@@ -15,7 +15,6 @@ if not encoded_json_credentials:
     raise Exception("Google Sheets credentials missing.")
 
 # Correction du padding Base64 (si nécessaire)
-# Ajouter des `=` pour que la longueur de la chaîne soit un multiple de 4
 padding = len(encoded_json_credentials) % 4
 if padding != 0:
     encoded_json_credentials += "=" * (4 - padding)
@@ -39,18 +38,28 @@ service = build('sheets', 'v4', credentials=credentials)
 
 # Fonction pour obtenir des données depuis Google Sheets
 def get_data_from_sheets(sheet_id, sheet_name):
-    # Construire la plage à partir du nom de la feuille
-    range_name = f"{sheet_name}"
+    """
+    Récupère les données d'une feuille Google Sheets et les convertit en DataFrame.
+    Utilise la première ligne comme en-tête pour les noms de colonnes.
+    """
+    try:
+        # Construire la plage à partir du nom de la feuille
+        range_name = f"{sheet_name}"
 
-    # Récupérer les données de la feuille
-    result = service.spreadsheets().values().get(spreadsheetId=sheet_id, range=range_name).execute()
-    values = result.get('values', [])
+        # Récupérer les données de la feuille
+        result = service.spreadsheets().values().get(spreadsheetId=sheet_id, range=range_name).execute()
+        values = result.get('values', [])
 
-    # Si des données existent, les convertir en DataFrame
-    if not values:
-        return pd.DataFrame()  # Aucune donnée trouvée
-    else:
-        return pd.DataFrame(values)
+        # Vérifier si des données existent
+        if not values:
+            return pd.DataFrame()  # Aucune donnée trouvée
+
+        # Utiliser la première ligne comme noms de colonnes
+        return pd.DataFrame(values[1:], columns=values[0])
+
+    except Exception as e:
+        st.error(f"Erreur lors de la récupération des données : {e}")
+        return pd.DataFrame()
 
 # Application Streamlit
 def app():
@@ -68,20 +77,22 @@ def app():
             df = get_data_from_sheets(sheet_id, sheet_name)
 
             if df.empty:
-                st.write("Aucune donnée trouvée dans la feuille.")
+                st.warning("Aucune donnée trouvée dans la feuille. Vérifiez l'ID et le nom de la feuille.")
             else:
-                st.write("Données de la feuille sélectionnée :", df)
+                st.subheader("Données de la feuille sélectionnée :")
+                st.dataframe(df)
 
                 # Proposer une colonne pour filtrer les valeurs
                 column_to_filter = st.selectbox("Choisissez la colonne pour filtrer les valeurs :", df.columns)
 
                 # Sélectionner des valeurs spécifiques pour filtrer les données
-                unique_values = df[column_to_filter].unique()
+                unique_values = df[column_to_filter].dropna().unique()
                 selected_value = st.selectbox("Choisissez une valeur à afficher :", unique_values)
 
                 # Afficher les données filtrées
                 filtered_df = df[df[column_to_filter] == selected_value]
-                st.write(f"Données filtrées par {column_to_filter} = {selected_value} :", filtered_df)
+                st.subheader(f"Données filtrées par {column_to_filter} = {selected_value} :")
+                st.dataframe(filtered_df)
 
         except Exception as e:
             st.error(f"Erreur : {e}")
