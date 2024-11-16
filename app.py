@@ -36,7 +36,7 @@ credentials = Credentials.from_service_account_info(credentials_dict, scopes=sco
 # Créer le service API Google Sheets
 service = build('sheets', 'v4', credentials=credentials)
 
-# Fonction pour obtenir des données depuis Google Sheets
+# Fonction corrigée pour récupérer les données depuis Google Sheets
 def get_data_from_sheets(sheet_id, sheet_name):
     """
     Récupère les données d'une feuille Google Sheets et les convertit en DataFrame.
@@ -58,8 +58,8 @@ def get_data_from_sheets(sheet_id, sheet_name):
         # Utiliser la première ligne comme noms de colonnes
         df = pd.DataFrame(values[1:], columns=values[0])
 
-        # Remplir les cellules manquantes avec None
-        df.fillna(value=None, inplace=True)
+        # Remplacer les cellules vides (chaînes vides) par None
+        df = df.replace("", None)
 
         return df
 
