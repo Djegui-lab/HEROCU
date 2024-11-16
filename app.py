@@ -13,7 +13,12 @@ if not encoded_json_credentials:
     st.error("Les informations d'identification Google Sheets sont manquantes dans les variables d'environnement.")
     raise Exception("Google Sheets credentials missing.")
 
-# Vérifier si les informations sont bien en base64
+# Correction du padding Base64 (si nécessaire)
+# Ajouter des `=` pour que la longueur de la chaîne soit un multiple de 4
+padding = len(encoded_json_credentials) % 4
+if padding != 0:
+    encoded_json_credentials += "=" * (4 - padding)
+
 try:
     # Décoder la chaîne base64 pour obtenir le fichier JSON
     decoded_json = base64.b64decode(encoded_json_credentials)
