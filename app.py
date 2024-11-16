@@ -41,6 +41,7 @@ def get_data_from_sheets(sheet_id, sheet_name):
     """
     Récupère les données d'une feuille Google Sheets et les convertit en DataFrame.
     Utilise la première ligne comme en-tête pour les noms de colonnes.
+    Remplace les valeurs manquantes par None.
     """
     try:
         # Construire la plage à partir du nom de la feuille
@@ -55,7 +56,12 @@ def get_data_from_sheets(sheet_id, sheet_name):
             return pd.DataFrame()  # Aucune donnée trouvée
 
         # Utiliser la première ligne comme noms de colonnes
-        return pd.DataFrame(values[1:], columns=values[0])
+        df = pd.DataFrame(values[1:], columns=values[0])
+
+        # Remplir les cellules manquantes avec None
+        df.fillna(value=None, inplace=True)
+
+        return df
 
     except Exception as e:
         st.error(f"Erreur lors de la récupération des données : {e}")
@@ -85,8 +91,11 @@ def app():
                 # Proposer une colonne pour filtrer les valeurs
                 column_to_filter = st.selectbox("Choisissez la colonne pour filtrer les valeurs :", df.columns)
 
+                # Remplacer les valeurs manquantes par 'None' dans la colonne choisie
+                df[column_to_filter] = df[column_to_filter].replace("", None)
+
                 # Sélectionner des valeurs spécifiques pour filtrer les données
-                unique_values = df[column_to_filter].dropna().unique()
+                unique_values = df[column_to_filter].unique()  # Inclut les valeurs None
                 selected_value = st.selectbox("Choisissez une valeur à afficher :", unique_values)
 
                 # Afficher les données filtrées
