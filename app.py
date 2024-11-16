@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import json
 import base64
-import pandas as pd
 from googleapiclient.discovery import build
 from google.oauth2.service_account import Credentials
 
@@ -14,11 +13,14 @@ if not encoded_json_credentials:
     st.error("Les informations d'identification Google Sheets sont manquantes dans les variables d'environnement.")
     raise Exception("Google Sheets credentials missing.")
 
-# Décoder la chaîne base64 pour obtenir le fichier JSON
-decoded_json = base64.b64decode(encoded_json_credentials)
-
-# Convertir la chaîne JSON décodée en dictionnaire
-credentials_dict = json.loads(decoded_json)
+# Vérifier si les informations sont bien en base64
+try:
+    # Décoder la chaîne base64 pour obtenir le fichier JSON
+    decoded_json = base64.b64decode(encoded_json_credentials)
+    credentials_dict = json.loads(decoded_json)
+except Exception as e:
+    st.error(f"Erreur lors du décodage des informations d'identification : {e}")
+    raise
 
 # Définir les étendues (scopes) nécessaires pour accéder aux Google Sheets
 scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
@@ -33,7 +35,7 @@ service = build('sheets', 'v4', credentials=credentials)
 def get_data_from_sheets(sheet_id, sheet_name):
     # Construire la plage à partir du nom de la feuille
     range_name = f"{sheet_name}"
-    
+
     # Récupérer les données de la feuille
     result = service.spreadsheets().values().get(spreadsheetId=sheet_id, range=range_name).execute()
     values = result.get('values', [])
