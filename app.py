@@ -50,11 +50,12 @@ def get_data_from_sheet(sheet_name):
         values = result.get("values", [])
 
         if values:
+            # Convertir les données en DataFrame
             df = pd.DataFrame(values[1:], columns=values[0])  # Utiliser la première ligne comme noms de colonnes
+            df.fillna("Non spécifié", inplace=True)  # Remplacer les cellules vides
             return df
         else:
             return pd.DataFrame()  # Retourner un DataFrame vide si aucune donnée n'existe
-
     except Exception as e:
         st.error(f"Erreur lors de la récupération des données : {e}")
         return pd.DataFrame()
@@ -127,16 +128,12 @@ def app():
 
                 column_to_filter = st.selectbox("Choisissez la colonne pour filtrer les valeurs :", df.columns)
                 if column_to_filter:
-                    unique_values = df[column_to_filter].dropna().unique()
-                    if len(unique_values) > 0:
-                        selected_value = st.selectbox("Choisissez une valeur à afficher :", unique_values)
-                        filtered_df = df[df[column_to_filter] == selected_value]
-                        st.subheader(f"Données filtrées par {column_to_filter} = {selected_value} :")
-                        st.dataframe(filtered_df)
-                    else:
-                        st.warning(f"La colonne '{column_to_filter}' ne contient pas de valeurs valides pour le filtrage.")
-        else:
-            st.error("Veuillez entrer le nom d'un onglet valide.")
+                    df[column_to_filter] = df[column_to_filter].astype(str)  # Convertir explicitement en chaîne
+                    unique_values = df[column_to_filter].unique()
+                    selected_value = st.selectbox("Choisissez une valeur à afficher :", unique_values)
+                    filtered_df = df[df[column_to_filter] == selected_value]
+                    st.subheader(f"Données filtrées par {column_to_filter} = {selected_value} :")
+                    st.dataframe(filtered_df)
 
     if analyse_button:
         df = get_data_from_sheet(sheet_name)
