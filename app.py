@@ -8,14 +8,20 @@ from googleapiclient.discovery import build
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Configuration des identifiants Google Sheets
+# Récupération des identifiants et de l'ID de la feuille depuis les variables d'environnement
 encoded_json_credentials = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+spreadsheet_id = os.environ.get("SPREADSHEET_ID")
 
-# Vérification et décodage des identifiants
+# Vérification des variables d'environnement
 if not encoded_json_credentials:
     st.error("Les informations d'identification Google Sheets sont manquantes dans les variables d'environnement.")
     raise Exception("Google Sheets credentials missing.")
 
+if not spreadsheet_id:
+    st.error("L'ID de la feuille Google Sheets est manquant dans les variables d'environnement.")
+    raise Exception("Spreadsheet ID missing.")
+
+# Décodage des identifiants
 padding = len(encoded_json_credentials) % 4
 if padding != 0:
     encoded_json_credentials += "=" * (4 - padding)
@@ -27,6 +33,7 @@ except Exception as e:
     st.error(f"Erreur lors du décodage des informations d'identification : {e}")
     raise
 
+# Connexion aux services Google Sheets
 try:
     credentials = Credentials.from_service_account_info(credentials_dict)
     service = build('sheets', 'v4', credentials=credentials)
@@ -38,7 +45,6 @@ except Exception as e:
 # Fonction pour récupérer les données d'une feuille spécifique
 def get_data_from_sheet(sheet_name):
     try:
-        # Récupération des données depuis l'onglet spécifié
         sheet = service.spreadsheets()
         result = sheet.values().get(spreadsheetId=spreadsheet_id, range=sheet_name).execute()
         values = result.get("values", [])
@@ -52,6 +58,10 @@ def get_data_from_sheet(sheet_name):
     except Exception as e:
         st.error(f"Erreur lors de la récupération des données : {e}")
         return pd.DataFrame()
+
+# Reste des fonctions (analyse et application) identiques
+# ...
+
 
 # Fonction d'analyse des sous-ensembles de type_mail
 def analyse_type_mail(df):
