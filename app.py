@@ -158,9 +158,3 @@ def app():
 
 if __name__ == "__main__":
     app()
-
-        df = get_data_from_sheet(sheet_name)
-        compare_courtiers_by_type_mail(df)
-
-if __name__ == "__main__":
-    app()
