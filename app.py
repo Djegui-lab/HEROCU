@@ -59,10 +59,6 @@ def get_data_from_sheet(sheet_name):
         st.error(f"Erreur lors de la récupération des données : {e}")
         return pd.DataFrame()
 
-# Reste des fonctions (analyse et application) identiques
-# ...
-
-
 # Fonction d'analyse des sous-ensembles de type_mail
 def analyse_type_mail(df):
     if df.empty:
@@ -151,6 +147,4 @@ def app():
         compare_courtiers_by_type_mail(df)
 
 if __name__ == "__main__":
-    spreadsheet_id = st.text_input("Entrez l'ID de votre Google Sheets")
-    if spreadsheet_id:
-        app()
+    app()
